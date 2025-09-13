@@ -7,9 +7,11 @@ project(HauntedMuseum)
 set(CMAKE_CXX_STANDARD 11)
 
 # Set Raylib paths (adjust if needed)
-set(RAYLIB_DIR "$ENV{HOME}/source/raylib/build/raylib")
-set(RAYLIB_INCLUDE_DIR "${RAYLIB_DIR}/include")
-set(RAYLIB_LIB_DIR "${RAYLIB_DIR}")
+#set(RAYLIB_DIR "$ENV{HOME}/source/raylib/build/raylib")
+#set(RAYLIB_INCLUDE_DIR "${RAYLIB_DIR}/include")
+#set(RAYLIB_LIB_DIR "${RAYLIB_DIR}")
+find_library(RAYLIB_LIBRARY NAMES raylib PATHS "/usr/local/lib" "/usr/lib")
+
 
 # Include Raylib headers
 include_directories(${RAYLIB_INCLUDE_DIR} 
