@@ -10,8 +10,11 @@ set(CMAKE_CXX_STANDARD 11)
 #set(RAYLIB_DIR "$ENV{HOME}/source/raylib/build/raylib")
 #set(RAYLIB_INCLUDE_DIR "${RAYLIB_DIR}/include")
 #set(RAYLIB_LIB_DIR "${RAYLIB_DIR}")
-find_library(RAYLIB_LIBRARY NAMES raylib PATHS "/usr/local/lib" "/usr/lib")
-
+if(WIN32)
+    find_library(RAYLIB_LIBRARY NAMES raylib PATHS "$ENV{HOME}/source/raylib/build/raylib")
+elseif(LINUX)
+    find_library(RAYLIB_LIBRARY NAMES raylib PATHS "/usr/local/lib" "/usr/lib")
+endif()
 
 # Include Raylib headers
 include_directories(${RAYLIB_INCLUDE_DIR} 
@@ -28,7 +31,7 @@ add_executable(HauntedMuseum
 )
 
 # Link Raylib static library (change to raylib.so if using shared)
-target_link_libraries(HauntedMuseum ${RAYLIB_LIB_DIR}/libraylib.a)
+target_link_libraries(HauntedMuseum ${RAYLIB_LIBRARY})
 
 # Set output directories for build
 set_target_properties(HauntedMuseum PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
