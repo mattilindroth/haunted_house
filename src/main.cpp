@@ -19,7 +19,8 @@ const int screenWidth = 800;
 const int screenHeight = 600;
 
 // Player properties
-Sprite playerSprite;
+Texture2D playerTexture = LoadTexture("../resources/Ghost2.png");
+Sprite playerSprite(playerTexture, { (float)screenWidth / 2 - 25, (float)screenHeight - 50 });
 Player player((float)screenWidth / 2 - 25, (float)screenHeight - 50, 50, 50, screenWidth, 5.0f, playerSprite);
 SplashScreen *splashScreen;
 enum GameState currentState = SPLASH;

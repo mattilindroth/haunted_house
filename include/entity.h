@@ -1,4 +1,5 @@
-#include <raylib.h>
+#pragma once
+#include "raylib.h"
 #include "sprite.h"
 
 class Entity {

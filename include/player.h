@@ -1,3 +1,4 @@
+#pragma once
 #include "raylib.h"
 #include "entity.h"
 #include "sprite.h"
