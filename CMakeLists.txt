@@ -44,6 +44,10 @@ endif()
 # Create an executable from the source file
 add_executable(HauntedHouse 
             src/main.cpp
+            src/audio.cpp
+            src/debug.cpp
+            src/game.cpp
+            src/scoreboard.cpp
             src/falling_object.cpp
             src/ghost.cpp
             src/player.cpp
