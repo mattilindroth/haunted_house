@@ -1,3 +1,4 @@
+#pragma once
 #include "raylib.h"
 #include "entity.h"
 #include "sprite.h"
@@ -5,7 +6,9 @@
 class Player : public Entity {
 public:
     float speed = 5.0f;
-    int screenWidth;
+    int screenWidth = 0;
+
+    Player() : Entity() {}  // Default constructor
 
     Player(float x, float y, float width, float height, int screenWidth, float speed, Sprite sprite) : 
         Entity((Rectangle){x, y, width, height}, speed, sprite) 

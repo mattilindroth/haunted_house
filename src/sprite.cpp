@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <vector>
+
 void Sprite::addAnimation(const std::string& name, const std::vector<Rectangle>& frames, float speed) {
     Animation anim;
     anim.frames = frames;
