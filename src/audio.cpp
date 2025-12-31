@@ -11,6 +11,7 @@ void AudioManager::Init() {
     throwSound = LoadSound("../resources/throw.mp3");
     hitSound = LoadSound("../resources/hit.mp3");
     whooshSound = LoadSound("../resources/whoosh.mp3");
+    deathScream = LoadSound("../resources/death-scream.mp3");
     
     // Load music
     backgroundMusic = LoadMusicStream("../resources/spooky_music.mp3");
@@ -34,6 +35,7 @@ void AudioManager::Cleanup() {
     UnloadSound(throwSound);
     UnloadSound(hitSound);
     UnloadSound(whooshSound);
+    UnloadSound(deathScream);
     UnloadMusicStream(backgroundMusic);
     UnloadMusicStream(splashMusic);
     CloseAudioDevice();
@@ -81,5 +83,11 @@ void AudioManager::PlayWhooshSound() {
     if (soundEnabled && whooshSound.frameCount > 0) {
         SetSoundPitch(whooshSound, 0.85f + (float)(rand() % 30) / 100.0f);
         PlaySound(whooshSound);
+    }
+}
+
+void AudioManager::PlayDeathScream() {
+    if (soundEnabled && deathScream.frameCount > 0) {
+        PlaySound(deathScream);
     }
 }

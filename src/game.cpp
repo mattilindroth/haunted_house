@@ -16,8 +16,11 @@ void Game::Init() {
     // Initialize scoreboard
     scoreboard.Init();
 
+    // Load background texture
+    backgroundTexture = LoadTexture("../resources/library_background.png");
+
     // Load ghost sprite
-    ghostTexture = LoadTexture("../resources/Ghost2.png");
+    ghostTexture = LoadTexture("../resources/Ghost2_colored.png");
     ghostSprite = Sprite(ghostTexture, { 100, 30 });
 
     // Define ghost idle animation frames
@@ -67,9 +70,54 @@ void Game::Init() {
     // Create ghost enemy
     ghost = Ghost(100, 30, 50, 87, screenWidth, screenHeight, 6.0f, ghostSprite);
 
-    // Create player
-    Sprite emptySprite;
-    player = Player((float)screenWidth / 2 - 25, (float)screenHeight - 60, 40, 50, screenWidth, 5.0f, emptySprite);
+    // Load player texture and setup animations
+    playerTexture = LoadTexture("../resources/player.png");
+    playerSprite = Sprite(playerTexture, { (float)screenWidth / 2 - 25, (float)screenHeight - 100 });
+
+    // Player idle animation (1 frame)
+    // x: 2798, y: 82, x2: 3139, y2: 858 -> width: 341, height: 776
+    std::vector<Rectangle> playerIdleFrames = {
+        { 2798.0f, 82.0f, 341.0f, 776.0f }
+    };
+    playerSprite.addAnimation("idle", playerIdleFrames, 1.0f);
+
+    // Player move animation (4 frames)
+    // x: 945, y: 82, x2: 1300, y2: 923 -> width: 355, height: 841
+    const float moveFrameWidth = 355.0f;
+    const float moveFrameHeight = 841.0f;
+    const float moveStartX = 945.0f;
+    const float moveStartY = 82.0f;
+    std::vector<Rectangle> playerMoveFrames = {
+        { moveStartX + 0 * moveFrameWidth, moveStartY, moveFrameWidth, moveFrameHeight },
+        { moveStartX + 1 * moveFrameWidth, moveStartY, moveFrameWidth, moveFrameHeight },
+        { moveStartX + 2 * moveFrameWidth, moveStartY, moveFrameWidth, moveFrameHeight },
+        { moveStartX + 3 * moveFrameWidth, moveStartY, moveFrameWidth, moveFrameHeight }
+    };
+    playerSprite.addAnimation("move", playerMoveFrames, 10.0f);
+
+    // Player dead animation (1 frame)
+    // x: 260, y: 540, x2: 663, y2: 806 -> width: 403, height: 266
+    std::vector<Rectangle> playerDeadFrames = {
+        { 260.0f, 540.0f, 403.0f, 266.0f }
+    };
+    playerSprite.addAnimation("dead", playerDeadFrames, 1.0f);
+
+    playerSprite.setActive("idle");
+
+    // Scale player to be ~10% bigger than ghost (ghost is 50x87)
+    // Target size: ~55x96, idle frame is 341x776
+    const float playerScale = 0.126f;
+    playerSprite.setScale(playerScale);
+
+    // Calculate scaled player dimensions for collision rectangle
+    const float scaledPlayerWidth = 341.0f * playerScale;   // ~41 pixels
+    const float scaledPlayerHeight = 776.0f * playerScale;  // ~93 pixels
+
+    // Create player with sprite
+    player = Player((float)screenWidth / 2 - scaledPlayerWidth / 2, 
+                    (float)screenHeight - scaledPlayerHeight - 10, 
+                    scaledPlayerWidth, scaledPlayerHeight, 
+                    screenWidth, 5.0f, playerSprite);
 
     // Create the splash screen
     splashScreen = new SplashScreen("../resources/splash.png", 3.0f, 1.0f, 1.0f);
@@ -82,12 +130,15 @@ void Game::UpdateBooks() {
         // Collision detection with player
         if (CheckCollisionRecs(*player.GetRectangle(), fallingObjects[i].rect)) {
             audio.PlayHitSound();
-            audio.PlaySplashMusic();
+            audio.PlayDeathScream();
             
-            // Check if player made the scoreboard
-            scoreboard.StartNameEntry(survivalTime);
+            // Set player to dead state
+            player.SetState(PlayerState::DEAD);
             
-            currentState = GAME_OVER;
+            // Start death sequence
+            deathTimer = 0.0f;
+            fadeAlpha = 0.0f;
+            currentState = DYING;
             return;
         }
 
@@ -167,6 +218,28 @@ void Game::Update(float deltaTime) {
             break;
         }
         
+        case DYING: {
+            deathTimer += deltaTime;
+            
+            // Start fading after (deathDuration - fadeDuration) seconds
+            float fadeStartTime = deathDuration - fadeDuration;
+            if (deathTimer > fadeStartTime) {
+                fadeAlpha = (deathTimer - fadeStartTime) / fadeDuration;
+                if (fadeAlpha > 1.0f) fadeAlpha = 1.0f;
+            }
+            
+            // Transition to game over after death duration
+            if (deathTimer >= deathDuration) {
+                audio.PlaySplashMusic();
+                scoreboard.StartNameEntry(survivalTime);
+                currentState = GAME_OVER;
+            }
+            
+            // Update player sprite animation
+            player.UpdateSprite(deltaTime);
+            break;
+        }
+        
         case GAME_OVER:
             // Handle name entry for scoreboard
             if (scoreboard.IsEnteringName()) {
@@ -182,6 +255,13 @@ void Game::Update(float deltaTime) {
 }
 
 void Game::DrawPlaying() {
+    // Draw tiled library background
+    for (int y = 0; y < screenHeight; y += backgroundTexture.height) {
+        for (int x = 0; x < screenWidth; x += backgroundTexture.width) {
+            DrawTexture(backgroundTexture, x, y, WHITE);
+        }
+    }
+
     // Draw bookshelf background at top
     DrawRectangle(0, 0, screenWidth, 120, DARKBROWN);
     DrawRectangle(0, 115, screenWidth, 10, BROWN);
@@ -190,8 +270,7 @@ void Game::DrawPlaying() {
     ghost.Draw();
     
     // Draw the player
-    DrawRectangleRec(*player.GetRectangle(), BLUE);
-    DrawRectangle((int)player.GetRectangle()->x + 10, (int)player.GetRectangle()->y + 5, 20, 15, BEIGE);
+    player.Draw();
     
     // Draw falling books
     for (auto& book : fallingObjects) {
@@ -213,6 +292,39 @@ void Game::DrawPlaying() {
     
     // Draw instructions
     DrawText("Use LEFT/RIGHT arrows to dodge the books!", 10, screenHeight - 25, 16, WHITE);
+}
+
+void Game::DrawDying() {
+    // Draw the game scene (same as playing)
+    // Draw tiled library background
+    for (int y = 0; y < screenHeight; y += backgroundTexture.height) {
+        for (int x = 0; x < screenWidth; x += backgroundTexture.width) {
+            DrawTexture(backgroundTexture, x, y, WHITE);
+        }
+    }
+
+    // Draw bookshelf background at top
+    DrawRectangle(0, 0, screenWidth, 120, DARKBROWN);
+    DrawRectangle(0, 115, screenWidth, 10, BROWN);
+    
+    // Draw the ghost
+    ghost.Draw();
+    
+    // Draw the player (dead sprite)
+    player.Draw();
+    
+    // Draw falling books
+    for (auto& book : fallingObjects) {
+        book.Draw();
+    }
+    
+    // Draw survival timer
+    DrawText(TextFormat("Time: %.1f s", survivalTime), screenWidth - 150, 130, 24, WHITE);
+    
+    // Draw fade overlay
+    if (fadeAlpha > 0.0f) {
+        DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, fadeAlpha));
+    }
 }
 
 void Game::DrawGameOver() {
@@ -254,6 +366,10 @@ void Game::Draw() {
         case PLAYING:
             DrawPlaying();
             break;
+        
+        case DYING:
+            DrawDying();
+            break;
             
         case GAME_OVER:
             DrawGameOver();
@@ -266,7 +382,17 @@ void Game::Draw() {
 void Game::RestartGame() {
     fallingObjects.clear();
     survivalTime = 0.0f;
-    player = Player((float)screenWidth / 2 - 25, (float)screenHeight - 60, 40, 50, screenWidth, 5.0f, Sprite());
+    playerSprite.setActive("idle");
+    
+    // Use same scaled dimensions as Init
+    const float playerScale = 0.126f;
+    const float scaledPlayerWidth = 341.0f * playerScale;
+    const float scaledPlayerHeight = 776.0f * playerScale;
+    
+    player = Player((float)screenWidth / 2 - scaledPlayerWidth / 2, 
+                    (float)screenHeight - scaledPlayerHeight - 10, 
+                    scaledPlayerWidth, scaledPlayerHeight, 
+                    screenWidth, 5.0f, playerSprite);
     ghost = Ghost(100, 30, 50, 87, screenWidth, screenHeight, 6.0f, ghostSprite);
     ghost.throwCooldown = baseThrowCooldown;
     audio.PlayGameMusic();
@@ -275,5 +401,8 @@ void Game::RestartGame() {
 
 void Game::Cleanup() {
     delete splashScreen;
+    UnloadTexture(backgroundTexture);
+    UnloadTexture(ghostTexture);
+    UnloadTexture(playerTexture);
     audio.Cleanup();
 }

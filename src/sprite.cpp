@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <cmath>
 
 void Sprite::addAnimation(const std::string& name, const std::vector<Rectangle>& frames, float speed) {
     Animation anim;
@@ -37,6 +38,19 @@ void Sprite::update(float delta) {
 void Sprite::draw() {
     if (activeAnimation.empty()) return;
     Animation &anim = animations[activeAnimation];
-    DrawTextureRec(texture, anim.frames[anim.currentFrame], position, WHITE);
+    Rectangle source = anim.frames[anim.currentFrame];
+    
+    // Flip horizontally by using negative width in source rectangle
+    if (flipX) {
+        source.width = -source.width;
+    }
+    
+    Rectangle dest = {
+        position.x,
+        position.y,
+        std::abs(source.width) * scale.x,
+        source.height * scale.y
+    };
+    DrawTexturePro(texture, source, dest, {0, 0}, 0.0f, WHITE);
 }
 
