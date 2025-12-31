@@ -7,6 +7,7 @@ public:
     Sound throwSound;
     Sound hitSound;
     Sound whooshSound;
+    Sound deathScream;
     
     // Music
     Music backgroundMusic;
@@ -29,6 +30,7 @@ public:
     void PlayThrowSound();
     void PlayHitSound();
     void PlayWhooshSound();
+    void PlayDeathScream();
 };
 
 // Global audio manager

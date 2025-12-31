@@ -12,6 +12,7 @@
 enum GameState {
     MENU,
     PLAYING,
+    DYING,
     GAME_OVER,
     SPLASH
 };
@@ -19,18 +20,23 @@ enum GameState {
 class Game {
 public:
     // Screen dimensions
-    static const int screenWidth = 800;
-    static const int screenHeight = 600;
+    static const int screenWidth = 1280;
+    static const int screenHeight = 800;
 
     // Game state
     GameState currentState = SPLASH;
     
+    // Background
+    Texture2D backgroundTexture;
+
     // Ghost enemy
     Texture2D ghostTexture;
     Sprite ghostSprite;
     Ghost ghost;
     
     // Player
+    Texture2D playerTexture;
+    Sprite playerSprite;
     Player player;
     
     // Splash screen
@@ -49,6 +55,12 @@ public:
     // Debug mode data
     std::vector<Rectangle> debugAngryFrames;
     std::vector<Rectangle> debugIdleFrames;
+    
+    // Death sequence
+    float deathTimer = 0.0f;
+    float deathDuration = 2.0f;
+    float fadeDuration = 1.0f;
+    float fadeAlpha = 0.0f;
 
     // Lifecycle
     void Init();
@@ -62,6 +74,7 @@ public:
     
 private:
     void DrawPlaying();
+    void DrawDying();
     void DrawGameOver();
 };
 
