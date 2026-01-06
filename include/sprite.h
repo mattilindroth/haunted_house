@@ -9,6 +9,7 @@ struct Animation {
     float frameSpeed;   // frames per second
     int currentFrame = 0;
     float timer = 0.0f;
+    Vector2 offset = {0, 0};  // Position offset for this animation
 };
 
 class Sprite {
@@ -17,7 +18,7 @@ public:
     Sprite() : texture{}, position{0, 0}, scale{1.0f, 1.0f}, flipX(false) {}  // Default constructor
     Sprite(Texture2D tex, Vector2 pos) : texture(tex), position(pos), scale{1.0f, 1.0f}, flipX(false) {}
 
-    void addAnimation(const std::string& name, const std::vector<Rectangle>& frames, float speed);
+    void addAnimation(const std::string& name, const std::vector<Rectangle>& frames, float speed, Vector2 offset = {0, 0});
 
     void setActive(const std::string& name);
     void setPosition(Vector2 pos) { position = pos; }

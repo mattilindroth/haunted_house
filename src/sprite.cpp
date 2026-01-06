@@ -5,10 +5,11 @@
 #include <vector>
 #include <cmath>
 
-void Sprite::addAnimation(const std::string& name, const std::vector<Rectangle>& frames, float speed) {
+void Sprite::addAnimation(const std::string& name, const std::vector<Rectangle>& frames, float speed, Vector2 offset) {
     Animation anim;
     anim.frames = frames;
     anim.frameSpeed = speed;
+    anim.offset = offset;
     animations[name] = anim;
 }
 
@@ -46,8 +47,8 @@ void Sprite::draw() {
     }
     
     Rectangle dest = {
-        position.x,
-        position.y,
+        position.x + anim.offset.x * scale.x,
+        position.y + anim.offset.y * scale.y,
         std::abs(source.width) * scale.x,
         source.height * scale.y
     };

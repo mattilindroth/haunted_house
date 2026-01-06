@@ -1,6 +1,6 @@
 #include "splash.h"
 
-SplashScreen::SplashScreen(std::string texturePath, float displayTime, float fadeInTime, float fadeOutTime) {
+SplashScreen::SplashScreen(std::string texturePath, float displayTime, float fadeInTime, float fadeOutTime, int targetWidth, int targetHeight) {
     // Load splash screen assets here
     Image image = LoadImage(texturePath.c_str());
     splashTexture = LoadTextureFromImage(image);
@@ -9,6 +9,8 @@ SplashScreen::SplashScreen(std::string texturePath, float displayTime, float fad
     this->displayTime = displayTime;
     this->fadeInTime = fadeInTime;
     this->fadeOutTime = fadeOutTime;
+    this->targetWidth = targetWidth;
+    this->targetHeight = targetHeight;
 }
 
 void SplashScreen::Update() {
@@ -32,7 +34,7 @@ void SplashScreen::Update() {
 void SplashScreen::Draw() {
     // Draw splash screen with alpha blending
     Rectangle src = { 0, 0, (float)splashTexture.width, (float)splashTexture.height };
-    Rectangle dest = { 0, 0, (float)GetScreenWidth(), (float)GetScreenHeight() };
+    Rectangle dest = { 0, 0, (float)targetWidth, (float)targetHeight };
     Vector2 origin = { 0, 0 };
     Color tint = {255, 255, 255, (unsigned char)(currentAlpha * 255)};
     DrawTexturePro(splashTexture, src, dest, origin, 0.0f, tint);

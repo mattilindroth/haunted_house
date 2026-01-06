@@ -7,8 +7,30 @@
 Game game;
 
 void Game::Init() {
+    // First create window at game resolution, then toggle to borderless fullscreen
     InitWindow(screenWidth, screenHeight, "Haunted House - Dodge the Books!");
     SetTargetFPS(60);
+    
+    // Now we can get monitor dimensions
+    int monitor = GetCurrentMonitor();
+    int monitorWidth = GetMonitorWidth(monitor);
+    int monitorHeight = GetMonitorHeight(monitor);
+    
+    // Toggle to borderless fullscreen
+    ToggleBorderlessWindowed();
+    
+    // Create render texture at game resolution for scaling
+    targetTexture = LoadRenderTexture(screenWidth, screenHeight);
+    SetTextureFilter(targetTexture.texture, TEXTURE_FILTER_BILINEAR);
+    
+    // Calculate scale to fit screen while maintaining aspect ratio
+    float scaleX = (float)monitorWidth / screenWidth;
+    float scaleY = (float)monitorHeight / screenHeight;
+    renderScale = (scaleX < scaleY) ? scaleX : scaleY;
+    
+    // Calculate offset to center the game on screen
+    renderOffset.x = (monitorWidth - screenWidth * renderScale) / 2.0f;
+    renderOffset.y = (monitorHeight - screenHeight * renderScale) / 2.0f;
     
     // Initialize audio
     audio.Init();
@@ -100,7 +122,9 @@ void Game::Init() {
     std::vector<Rectangle> playerDeadFrames = {
         { 260.0f, 540.0f, 403.0f, 266.0f }
     };
-    playerSprite.addAnimation("dead", playerDeadFrames, 1.0f);
+    // Offset Y by the difference between idle height and dead height so the sprite sits on the ground
+    const float deadYOffset = 776.0f - 266.0f;  // 510 pixels
+    playerSprite.addAnimation("dead", playerDeadFrames, 1.0f, {0, deadYOffset});
 
     playerSprite.setActive("idle");
 
@@ -120,7 +144,7 @@ void Game::Init() {
                     screenWidth, 5.0f, playerSprite);
 
     // Create the splash screen
-    splashScreen = new SplashScreen("../resources/splash.png", 3.0f, 1.0f, 1.0f);
+    splashScreen = new SplashScreen("../resources/splash.png", 3.0f, 1.0f, 1.0f, screenWidth, screenHeight);
 }
 
 void Game::UpdateBooks() {
@@ -344,12 +368,24 @@ void Game::DrawGameOver() {
 }
 
 void Game::Draw() {
-    BeginDrawing();
+    // Render game to target texture at native resolution
+    BeginTextureMode(targetTexture);
     ClearBackground(DARKGRAY);
     
     // Handle debug mode drawing
     if (debug.IsActive()) {
         debug.Draw();
+        EndTextureMode();
+        
+        // Draw scaled texture to screen
+        BeginDrawing();
+        ClearBackground(BLACK);
+        DrawTexturePro(
+            targetTexture.texture,
+            {0, 0, (float)screenWidth, -(float)screenHeight},  // Flip Y for render texture
+            {renderOffset.x, renderOffset.y, screenWidth * renderScale, screenHeight * renderScale},
+            {0, 0}, 0.0f, WHITE
+        );
         EndDrawing();
         return;
     }
@@ -376,6 +412,17 @@ void Game::Draw() {
             break;
     }
     
+    EndTextureMode();
+    
+    // Draw scaled texture to screen
+    BeginDrawing();
+    ClearBackground(BLACK);
+    DrawTexturePro(
+        targetTexture.texture,
+        {0, 0, (float)screenWidth, -(float)screenHeight},  // Flip Y for render texture
+        {renderOffset.x, renderOffset.y, screenWidth * renderScale, screenHeight * renderScale},
+        {0, 0}, 0.0f, WHITE
+    );
     EndDrawing();
 }
 
@@ -404,5 +451,6 @@ void Game::Cleanup() {
     UnloadTexture(backgroundTexture);
     UnloadTexture(ghostTexture);
     UnloadTexture(playerTexture);
+    UnloadRenderTexture(targetTexture);
     audio.Cleanup();
 }
