@@ -19,9 +19,14 @@ enum GameState {
 
 class Game {
 public:
-    // Screen dimensions
+    // Screen dimensions (internal game resolution)
     static const int screenWidth = 1280;
     static const int screenHeight = 800;
+    
+    // Fullscreen rendering
+    RenderTexture2D targetTexture;
+    float renderScale = 1.0f;
+    Vector2 renderOffset = {0, 0};
 
     // Game state
     GameState currentState = SPLASH;

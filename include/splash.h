@@ -12,8 +12,10 @@ public:
      * @param displayTime Time to display the splash screen.
      * @param fadeInTime Time for the splash screen to fade in.
      * @param fadeOutTime Time for the splash screen to fade out.
+     * @param targetWidth Target render width.
+     * @param targetHeight Target render height.
      */
-    SplashScreen(std::string texturePath, float displayTime, float fadeInTime, float fadeOutTime);
+    SplashScreen(std::string texturePath, float displayTime, float fadeInTime, float fadeOutTime, int targetWidth, int targetHeight);
 
     /**
      * Updates the splash screen state.
@@ -38,4 +40,6 @@ private:
     float fadeOutTime;
     float currentAlpha = 0.0f;
     bool isFinished = false;
+    int targetWidth;
+    int targetHeight;
 };
